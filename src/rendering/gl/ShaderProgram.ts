@@ -25,6 +25,11 @@ class ShaderProgram {
   attrNor: number;
   attrCol: number; // This time, it's an instanced rendering attribute, so each particle can have a unique color. Not per-vertex, but per-instance.
   attrTranslate: number; // Used in the vertex shader during instanced rendering to offset the vertex positions to the particle's drawn position.
+  attrRotate: number;
+  attrCol1: number;
+  attrCol2: number;
+  attrCol3: number;
+  attrCol4: number;  
   attrUV: number;
 
   unifModel: WebGLUniformLocation;
@@ -49,10 +54,16 @@ class ShaderProgram {
     }
 
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
-    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
+    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrTranslate = gl.getAttribLocation(this.prog, "vs_Translate");
+    this.attrRotate = gl.getAttribLocation(this.prog, "vs_Rotate");
     this.attrUV = gl.getAttribLocation(this.prog, "vs_UV");
+    this.attrCol1 = gl.getAttribLocation(this.prog, "vs_Col1");
+    this.attrCol2 = gl.getAttribLocation(this.prog, "vs_Col2");
+    this.attrCol3 = gl.getAttribLocation(this.prog, "vs_Col3");
+    this.attrCol4 = gl.getAttribLocation(this.prog, "vs_Col4");
+
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
@@ -143,7 +154,7 @@ class ShaderProgram {
     if (this.attrCol != -1 && d.bindCol()) {
       gl.enableVertexAttribArray(this.attrCol);
       gl.vertexAttribPointer(this.attrCol, 4, gl.FLOAT, false, 0, 0);
-      gl.vertexAttribDivisor(this.attrCol, 1); // Advance 1 index in col VBO for each drawn instance
+      gl.vertexAttribDivisor(this.attrCol, 0); // Advance 1 index in col VBO for each drawn instance
     }
 
     if (this.attrTranslate != -1 && d.bindTranslate()) {
@@ -152,10 +163,42 @@ class ShaderProgram {
       gl.vertexAttribDivisor(this.attrTranslate, 1); // Advance 1 index in translate VBO for each drawn instance
     }
 
+    if (this.attrRotate != -1 && d.bindRotate())
+    {
+      gl.enableVertexAttribArray(this.attrRotate);
+      gl.vertexAttribPointer(this.attrRotate, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrRotate, 1);
+    }
+
     if (this.attrUV != -1 && d.bindUV()) {
       gl.enableVertexAttribArray(this.attrUV);
       gl.vertexAttribPointer(this.attrUV, 2, gl.FLOAT, false, 0, 0);
       gl.vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
+    }
+
+    if (this.attrCol1 != -1 && d.bindCol1()) {
+      gl.enableVertexAttribArray(this.attrCol1);
+      gl.vertexAttribPointer(this.attrCol1, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrCol1, 1); // Advance 1 index in col VBO for each drawn instance
+    }
+
+    if (this.attrCol2 != -1 && d.bindCol2()) {
+      gl.enableVertexAttribArray(this.attrCol2);
+      gl.vertexAttribPointer(this.attrCol2, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrCol2, 1); // Advance 1 index in col VBO for each drawn instance
+    }
+
+
+    if (this.attrCol3 != -1 && d.bindCol3()) {
+      gl.enableVertexAttribArray(this.attrCol3);
+      gl.vertexAttribPointer(this.attrCol3, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrCol3, 1); // Advance 1 index in col VBO for each drawn instance
+    }
+
+    if (this.attrCol4 != -1 && d.bindCol4()) {
+      gl.enableVertexAttribArray(this.attrCol4);
+      gl.vertexAttribPointer(this.attrCol4, 4, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrCol4, 1); // Advance 1 index in col VBO for each drawn instance
     }
 
     // TODO: Set up attribute data for additional instanced rendering data as needed
@@ -178,7 +221,12 @@ class ShaderProgram {
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
     if (this.attrTranslate != -1) gl.disableVertexAttribArray(this.attrTranslate);
+    if (this.attrRotate != -1) gl.disableVertexAttribArray(this.attrRotate);
     if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
+    if (this.attrCol1 != -1) gl.disableVertexAttribArray(this.attrCol1);
+    if (this.attrCol2 != -1) gl.disableVertexAttribArray(this.attrCol2);
+    if (this.attrCol3 != -1) gl.disableVertexAttribArray(this.attrCol3);
+    if (this.attrCol4 != -1) gl.disableVertexAttribArray(this.attrCol4);
   }
 };
 

@@ -8,7 +8,7 @@ uniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads 
 
 in vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place
 in vec4 vs_Nor; // Non-instanced, and presently unused
-// in vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color
+in vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color
 in vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene
 // in vec3 vs_Rotate;
 in vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.
@@ -25,8 +25,8 @@ void main()
 {
 	mat4 T = mat4(vs_Col1, vs_Col2, vs_Col3, vs_Col4);
     fs_Col = vec4(1.0);
-    fs_Pos = T * vs_Pos;
-    fs_Nor = T * vs_Nor;
+    fs_Pos = vs_Pos;
+    fs_Nor = vs_Nor;
 
     // vec3 offset = vs_Translate;
     // offset.z = (sin((u_Time + offset.x) * 3.14159 * 0.1) + cos((u_Time + offset.y) * 3.14159 * 0.1)) * 1.5;

@@ -1,19 +1,32 @@
-import {vec3} from 'gl-matrix';
+import {vec3, mat3} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
+import Mesh from './geometry/Mesh';
 import ScreenQuad from './geometry/ScreenQuad';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import {readTextFile} from './globals';
+import ExpansionRule from './lsystem/ExpansionRule';
+import DrawingRule from './lsystem/DrawingRule';
+import {Action} from './lsystem/DrawingRule';
+import LSystem from './lsystem/LSystem';
+import Road from './geometry/Road';
+
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
+  expansions: 1,
 };
 
+let expansions: number = controls.expansions;
+
 let square: Square;
+let mesh: Mesh;
+let road: Road;
 let screenQuad: ScreenQuad;
 let time: number = 0.0;
 
@@ -22,31 +35,63 @@ function loadScene() {
   square.create();
   screenQuad = new ScreenQuad();
   screenQuad.create();
+  road = new Road();
+  road.create();
 
-  // Set up instanced rendering data arrays here.
-  // This example creates a set of positional
-  // offsets and gradiated colors for a 100x100 grid
-  // of squares, even though the VBO data for just
-  // one square is actually passed to the GPU
-  let offsetsArray = [];
-  let colorsArray = [];
-  let n: number = 100.0;
-  for(let i = 0; i < n; i++) {
-    for(let j = 0; j < n; j++) {
-      offsetsArray.push(i);
-      offsetsArray.push(j);
-      offsetsArray.push(0);
+  let obj0: string = readTextFile('../objs/cylinder.obj')
+  mesh = new Mesh(obj0, vec3.create());
+  mesh.create();
 
-      colorsArray.push(i / n);
-      colorsArray.push(j / n);
-      colorsArray.push(1.0);
-      colorsArray.push(1.0); // Alpha channel
-    }
+  let expansionRules = new Map<string, ExpansionRule>([
+    ['H', new ExpansionRule("hhhhEH")],
+    ['E', new ExpansionRule('[nF][sF]')],
+    ['R', new ExpansionRule("[llL][ffF][rrR]")],
+    ['L', new ExpansionRule("[llL][ffF][rrR]")],
+    ['F', new ExpansionRule("[llL][ffF][rrR]")]
+  ]);
+  let drawingRules = new Map<string, DrawingRule>([
+    ['h', new DrawingRule(Action.Highway)],
+    ['n', new DrawingRule(Action.ExitN)],
+    ['s', new DrawingRule(Action.ExitS)],
+    ['l', new DrawingRule(Action.RoadLeft)],
+    ['f', new DrawingRule(Action.RoadForward)],
+    ['r', new DrawingRule(Action.RoadRight)],
+    ['[', new DrawingRule(Action.Push)],
+    [']', new DrawingRule(Action.Pop)]
+  ]);
+  let lsystem = new LSystem('H', expansionRules, drawingRules);
+  let instances = lsystem.expand(controls.expansions);
+
+  let col1Arr = [];
+  let col2Arr = [];
+  let col3Arr = [];
+  let col4Arr = [];
+  // let instances = lsystem.draw();
+  // for (let instance of instances)
+  // {
+  //   col1Arr.push(instance[0], instance[1], instance[2], instance[3]);
+  //   col2Arr.push(instance[4], instance[5], instance[6], instance[7]);
+  //   col3Arr.push(instance[8], instance[9], instance[10], instance[11]);
+  //   col4Arr.push(instance[12], instance[13], instance[14], instance[15]);
+  // }
+  for (let instance of instances)
+  {
+    col1Arr.push(instance[0], instance[1], instance[2], 0);
+    col2Arr.push(instance[3], instance[4], instance[5], 0);
+    col3Arr.push(instance[6], instance[7], instance[8], 0);
+    col4Arr.push(0, 0, 0, 1);
   }
-  let offsets: Float32Array = new Float32Array(offsetsArray);
-  let colors: Float32Array = new Float32Array(colorsArray);
-  square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(n * n); // grid of "particles"
+
+  let col1 : Float32Array = new Float32Array(col1Arr);
+  let col2 : Float32Array = new Float32Array(col2Arr);
+  let col3 : Float32Array = new Float32Array(col3Arr);
+  let col4 : Float32Array = new Float32Array(col4Arr);
+
+  mesh.setNumInstances(instances.length);
+  mesh.setInstanceVBOs(col1, col2, col3, col4);
+
+  road.setNumInstances(instances.length);
+  road.setInstanceVBOs(col1, col2, col3, col4);
 }
 
 function main() {
@@ -60,6 +105,7 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'expansions', 1, 15).step(1);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -74,16 +120,15 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  const camera = new Camera(vec3.fromValues(50, 50, 50), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
+  gl.enable(gl.DEPTH_TEST);
 
   const instancedShader = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/instanced-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/instanced-frag.glsl')),
+    new Shader(gl.VERTEX_SHADER, require('./shaders/flat-instanced-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-instanced-frag.glsl')),
   ]);
 
   const flat = new ShaderProgram([
@@ -93,6 +138,11 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    if (expansions != controls.expansions)
+    {
+      expansions = controls.expansions;
+      loadScene();
+    }
     camera.update();
     stats.begin();
     instancedShader.setTime(time);
@@ -101,7 +151,7 @@ function main() {
     renderer.clear();
     renderer.render(camera, flat, [screenQuad]);
     renderer.render(camera, instancedShader, [
-      square,
+      road
     ]);
     stats.end();
 

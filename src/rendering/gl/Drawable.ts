@@ -7,14 +7,24 @@ abstract class Drawable {
   bufPos: WebGLBuffer;
   bufNor: WebGLBuffer;
   bufTranslate: WebGLBuffer;
+  bufRotate: WebGLBuffer;
   bufCol: WebGLBuffer;
   bufUV: WebGLBuffer;
+  bufCol1: WebGLBuffer;
+  bufCol2: WebGLBuffer;
+  bufCol3: WebGLBuffer;
+  bufCol4: WebGLBuffer;
 
   idxGenerated: boolean = false;
   posGenerated: boolean = false;
   norGenerated: boolean = false;
   colGenerated: boolean = false;
   translateGenerated: boolean = false;
+  rotateGenerated: boolean = false;
+  col1Generated: boolean = false;
+  col2Generated: boolean = false;
+  col3Generated: boolean = false;
+  col4Generated: boolean = false;
   uvGenerated: boolean = false;
 
   numInstances: number = 0; // How many instances of this Drawable the shader program should draw
@@ -27,7 +37,12 @@ abstract class Drawable {
     gl.deleteBuffer(this.bufNor);
     gl.deleteBuffer(this.bufCol);
     gl.deleteBuffer(this.bufTranslate);
+    gl.deleteBuffer(this.bufRotate);
     gl.deleteBuffer(this.bufUV);
+    gl.deleteBuffer(this.bufCol1);
+    gl.deleteBuffer(this.bufCol2);
+    gl.deleteBuffer(this.bufCol3);
+    gl.deleteBuffer(this.bufCol4);
   }
 
   generateIdx() {
@@ -53,6 +68,39 @@ abstract class Drawable {
   generateTranslate() {
     this.translateGenerated = true;
     this.bufTranslate = gl.createBuffer();
+  }
+
+  generateRotate() {
+    this.rotateGenerated = true;
+    this.bufRotate = gl.createBuffer();
+  }
+
+  generateColumns()
+  {
+    this.generateCol1();
+    this.generateCol2();
+    this.generateCol3();
+    this.generateCol4();
+  }
+
+  generateCol1() {
+    this.col1Generated = true;
+    this.bufCol1 = gl.createBuffer();
+  }
+
+  generateCol2() {
+    this.col2Generated = true;
+    this.bufCol2 = gl.createBuffer();
+  }
+
+  generateCol3() {
+    this.col3Generated = true;
+    this.bufCol3 = gl.createBuffer();
+  }
+  
+  generateCol4() {
+    this.col4Generated = true;
+    this.bufCol4 = gl.createBuffer();
   }
 
   generateUV() {
@@ -93,6 +141,41 @@ abstract class Drawable {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTranslate);
     }
     return this.translateGenerated;
+  }
+
+  bindRotate(): boolean {
+    if (this.rotateGenerated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufRotate);
+    }
+    return this.rotateGenerated;
+  }
+
+  bindCol1(): boolean {
+    if (this.col1Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol1);
+    }
+    return this.colGenerated;
+  }
+
+  bindCol2(): boolean {
+    if (this.col2Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol2);
+    }
+    return this.colGenerated;
+  }
+
+  bindCol3(): boolean {
+    if (this.col3Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol3);
+    }
+    return this.colGenerated;
+  }
+
+  bindCol4(): boolean {
+    if (this.col4Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol4);
+    }
+    return this.colGenerated;
   }
 
   bindUV(): boolean {
