@@ -41,6 +41,9 @@ class ShaderProgram {
   unifEye: WebGLUniformLocation;
   unifUp: WebGLUniformLocation;
   unifDimensions: WebGLUniformLocation;
+  unifTerrainType: WebGLUniformLocation;
+  unifPopulationType: WebGLUniformLocation;
+  unifSeaLevel: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -72,6 +75,9 @@ class ShaderProgram {
     this.unifEye   = gl.getUniformLocation(this.prog, "u_Eye");
     this.unifRef   = gl.getUniformLocation(this.prog, "u_Ref");
     this.unifUp   = gl.getUniformLocation(this.prog, "u_Up");
+    this.unifTerrainType = gl.getUniformLocation(this.prog, "u_TerrainType");
+    this.unifPopulationType = gl.getUniformLocation(this.prog, "u_PopulationType");
+    this.unifSeaLevel = gl.getUniformLocation(this.prog, "u_SeaLevel");
   }
 
   use() {
@@ -133,6 +139,31 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, t);
+    }
+  }
+
+  setTerrainType(t: number) {
+    this.use();
+    if (this.unifTerrainType !== -1)
+    {
+      gl.uniform1i(this.unifTerrainType, t);
+    }
+  }
+
+  setPopulationType(t: number) {
+    this.use();
+    if (this.unifPopulationType !== -1)
+    {
+      gl.uniform1i(this.unifPopulationType, t);
+    }
+  }
+
+  setSeaLevel(t: number)
+  {
+    this.use();
+    if (this.unifSeaLevel !== -1)
+    {
+      gl.uniform1f(this.unifSeaLevel, t);
     }
   }
 

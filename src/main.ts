@@ -19,10 +19,16 @@ import Road from './geometry/Road';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  expansions: 1,
+  terrain: 'Detailed',
+  population: 'Detailed',
+  threshold: 0.4,
+  seaLevel: 0.5
 };
 
-let expansions: number = controls.expansions;
+let terrainType: string = controls.terrain;
+let populationType: string = controls.population;
+let populationThreshold: number = controls.threshold;
+let seaLevel: number = controls.seaLevel;
 
 let square: Square;
 let mesh: Mesh;
@@ -59,21 +65,13 @@ function loadScene() {
     ['[', new DrawingRule(Action.Push)],
     [']', new DrawingRule(Action.Pop)]
   ]);
-  let lsystem = new LSystem('H', expansionRules, drawingRules);
-  let instances = lsystem.expand(controls.expansions);
+  let lsystem = new LSystem(populationThreshold, seaLevel);
+  let instances = lsystem.expand();
 
   let col1Arr = [];
   let col2Arr = [];
   let col3Arr = [];
   let col4Arr = [];
-  // let instances = lsystem.draw();
-  // for (let instance of instances)
-  // {
-  //   col1Arr.push(instance[0], instance[1], instance[2], instance[3]);
-  //   col2Arr.push(instance[4], instance[5], instance[6], instance[7]);
-  //   col3Arr.push(instance[8], instance[9], instance[10], instance[11]);
-  //   col4Arr.push(instance[12], instance[13], instance[14], instance[15]);
-  // }
   for (let instance of instances)
   {
     col1Arr.push(instance[0], instance[1], instance[2], 0);
@@ -105,7 +103,10 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'expansions', 1, 15).step(1);
+  gui.add(controls, 'terrain', [ 'Detailed', 'Simple', 'None' ] );
+  gui.add(controls, 'population', ['Detailed', 'Simple', 'None']);
+  gui.add(controls, 'threshold', 0, 1).step(0.1);
+  gui.add(controls, 'seaLevel', 0, 1).step(0.05);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -136,11 +137,35 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
+  flat.setTerrainType(terrainType === 'Detailed' ? 0 :
+                      terrainType === 'Simple'   ? 1 : 2);
+  flat.setPopulationType(populationType === 'Detailed' ? 0 :
+                         populationType === 'Simple'   ? 1 : 2);
+  flat.setSeaLevel(seaLevel);
+
   // This function will be called every frame
   function tick() {
-    if (expansions != controls.expansions)
+    if (terrainType !== controls.terrain)
     {
-      expansions = controls.expansions;
+      terrainType = controls.terrain;
+      flat.setTerrainType(terrainType === 'Detailed' ? 0 :
+                          terrainType === 'Simple'   ? 1 : 2);
+    }
+    if (populationType !== controls.population)
+    {
+      populationType = controls.population;
+      flat.setPopulationType(populationType === 'Detailed' ? 0 :
+                             populationType === 'Simple'   ? 1 : 2);    
+    }
+    if (populationThreshold !== controls.threshold)
+    {
+      populationThreshold = controls.threshold;
+      loadScene();
+    }
+    if (seaLevel !== controls.seaLevel)
+    {
+      seaLevel = controls.seaLevel;
+      flat.setSeaLevel(seaLevel);
       loadScene();
     }
     camera.update();

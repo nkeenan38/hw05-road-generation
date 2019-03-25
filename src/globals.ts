@@ -47,3 +47,8 @@ export function angleBetweenLinesInRad(line1Start: vec2, line1End: vec2, line2St
 
     return atanA - atanB;
 }
+
+export function mix(a: number, b: number, t: number)
+{
+    return a*(1-t) + b*t;
+}
